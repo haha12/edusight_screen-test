@@ -1,0 +1,212 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package tech_challenge;
+
+import java.io.*;
+import java.util.*;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+/**
+ *
+ * @author nelson
+ */
+public class Tech_challenge {
+    
+    //Initialize Arraylist to store the students and teachers infor
+    public static ArrayList<List<String>> students = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> teachers = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> students_roster = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> teachers_roster = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> resultset = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> student_name = new ArrayList<List<String>>();
+    public static ArrayList<List<String>> teacher_name = new ArrayList<List<String>>();
+    public static ArrayList<String> student_teacher = new ArrayList<String>();
+    public static ArrayList<String> csv_result = new ArrayList<String>();
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+    
+    //Please change the path name to your local file path name
+    String file_path1 = "C:/Desktop/json_challenge/test-case/students.txt";
+    String file_path2 = "C:/Desktop/json_challenge/test-case/teachers.txt";
+    String file_path3 = "C:/Desktop/json_challenge/test-case/studentRoster.txt";
+    String file_path4 = "C:/Desktop/json_challenge/test-case/teacherRoster.txt";
+    
+    read_teacher_student_File(file_path1,students);
+    read_teacher_student_File(file_path2,teachers);
+    
+    read_teacherroster_studentroster_File(file_path3,"student_id",students_roster);
+    read_teacherroster_studentroster_File(file_path4,"teacher_id",teachers_roster);
+    
+    //split the students' list due to the large amount of students infor
+    find_student_teacher(students_roster,teachers_roster,0,students_roster.size()/2);
+    find_student_teacher(students_roster,teachers_roster,students_roster.size()/2,students_roster.size());
+    //for(int i = 0; i < student_teacher.size(); i++) {System.out.print("result: "+(student_teacher.get(i)).toString()+"\n");}  
+    generate_csv(student_teacher,students,teachers); 
+   
+    }
+    
+    //read and store the students.txt and teachers.txt data
+    public static void read_teacher_student_File(String path, ArrayList<List<String>> map) {
+
+        BufferedReader br = null;
+        JSONParser parser = new JSONParser();
+
+        try {
+
+            String sCurrentLine;
+
+            br = new BufferedReader(new FileReader(path));
+
+            while ((sCurrentLine = br.readLine()) != null) {
+
+                Object obj;
+                try {
+                    obj = parser.parse(sCurrentLine);
+                    JSONObject jsonObject = (JSONObject) obj;
+                    
+                    String full_name = (String) jsonObject.get("first_name") + "," + (String) jsonObject.get("last_name");
+                    //System.out.println(full_name);
+                    String id = Long.toString((long) jsonObject.get("id"));
+                   // System.out.println(id);
+                    
+                    map.add(Arrays.asList(id, full_name));
+
+                } catch (ParseException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null)br.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    //read and store the students_roster.txt and teachers_roster.txt data
+    public static void read_teacherroster_studentroster_File(String path,String name_id, ArrayList<List<String>> map) {
+
+        BufferedReader br = null;
+        JSONParser parser = new JSONParser();
+
+        try {
+
+            String sCurrentLine;
+
+            br = new BufferedReader(new FileReader(path));
+
+            while ((sCurrentLine = br.readLine()) != null) {
+
+                Object obj;
+                try {
+                    obj = parser.parse(sCurrentLine);
+                    JSONObject jsonObject = (JSONObject) obj;
+
+                    
+                    String id = Long.toString((long) jsonObject.get(name_id));
+                    //System.out.println(full_name);
+                    String class_id = Long.toString((long) jsonObject.get("class_id"));
+                   // System.out.println(id);
+                    
+                    map.add(Arrays.asList(id, class_id));
+
+                } catch (ParseException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null)br.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    
+    //search for the student and teacher according to their class id
+    public static void find_student_teacher(ArrayList<List<String>> student, ArrayList<List<String>> teacher, int start, int end){
+        
+        int t_size= teacher.size();
+        
+        for (int i =start; i< end;i++){
+            for (int j=0; j< t_size;j++){
+            if (student.get(i).get(1).equals(teacher.get(j).get(1))){
+                String result = student.get(i).get(0) + " " + teacher.get(j).get(0);
+                    if (!student_teacher.contains(result)){
+                        student_teacher.add(result);
+                    }
+                }
+            }
+        }
+        
+        
+    }
+    
+    //use the student id and teacher id to find out their name infor from the student and teacher Arraylist, and output the result on the txt file
+    //Please change the output file path name to your local file
+    public static void generate_csv(ArrayList<String> student_teacher,ArrayList<List<String>> student, ArrayList<List<String>> teacher){
+        
+        try {
+            
+            for (String str: student_teacher){
+            String[] splitstr = str.split("\\s+");
+            String result_student=null;
+            String result = null;
+            int i=0;
+            int j=0;
+            boolean found_student = false;
+            boolean found_teacher = false;
+            while (i<student.size()&&!found_student){
+                if(student.get(i).get(0).equals(splitstr[0])){
+                    result_student=student.get(i).get(0)+","+student.get(i).get(1)+",";
+                    found_student=true;
+                    }
+                i++;
+                }
+            while (j<teacher.size()&&!found_teacher){
+                if(teacher.get(j).get(0).equals(splitstr[1])){
+                    result=result_student + teacher.get(j).get(0)+","+teacher.get(j).get(1)+"\n";
+                    found_teacher=true;
+                    }
+                j++;
+                }
+            csv_result.add(result);
+            }
+            
+            //for(int i = 0; i < csv_result.size(); i++) {System.out.print("result: "+(csv_result.get(i)).toString()+ "\n");}  
+            File csvfile = new File("C:/Desktop/json_challenge/test-case/result.txt");
+
+            FileWriter fw = new FileWriter(csvfile);
+            for(String str: csv_result){
+                  fw.write(str);
+            }
+            fw.close();
+            
+            
+
+        } catch (IOException iox) {
+            //do stuff with exception
+            iox.printStackTrace();
+        }
+        
+    }
+    
+}
